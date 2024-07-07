@@ -3,6 +3,7 @@ package spotify
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -68,6 +69,33 @@ func RefreshAccessToken(tokens database.Tokens, cid string) (*database.Tokens, e
 	t := MapTokenResponse(tr)
 
 	return &t, nil
+}
+
+// Grabs the user's currently playing track.
+// Everything in the token struct, excluding the access token, can be nil
+// Returns a NowPlayingResponse struct.
+func GetNowPlaying(tokens database.Tokens) (*NowPlayingResponse, error) {
+	var response NowPlayingResponse
+
+	url := "https://api.spotify.com/v1/me/player/currently-playing"
+
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Authorization", "Bearer "+tokens.AccessToken)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = json.NewDecoder(res.Body).Decode(&response); err != nil {
+		return nil, err
+	}
+
+	if response.Error != nil {
+		return nil, errors.New(response.Error.Message)
+	}
+
+	return &response, nil
 }
 
 // Maps the returned spotify token response to the database token struct

@@ -71,6 +71,11 @@ func (p *Callback) Route(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if tr.Error != "" {
+		http.Error(w, tr.Error, http.StatusBadRequest)
+		return
+	}
+
 	tokens := spotify.MapTokenResponse(tr)
 
 	user, err := spotify.GetUser(tokens)
