@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/bojurgess/backend.beno.lol/internal/config"
 	"github.com/bojurgess/backend.beno.lol/internal/database"
@@ -72,13 +71,7 @@ func (p *Callback) Route(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokens := database.Tokens{
-		AccessToken:  tr.AccessToken,
-		TokenType:    tr.TokenType,
-		ExpiresAt:    time.Now().Add(time.Duration(tr.ExpiresIn) * time.Second),
-		Scope:        tr.Scope,
-		RefreshToken: tr.RefreshToken,
-	}
+	tokens := spotify.MapTokenResponse(tr)
 
 	user, err := spotify.GetUser(tokens)
 	if err != nil {

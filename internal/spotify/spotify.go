@@ -1,12 +1,17 @@
+// Useful helpers for grabbing Spotify API data.
 package spotify
 
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/bojurgess/backend.beno.lol/internal/database"
+	"github.com/bojurgess/backend.beno.lol/internal/util"
 )
 
+// Gets the user's spotify profile information.
 // this is NOT the same as database.GetUser()
 func GetUser(tokens database.Tokens) (*database.User, error) {
 	headers := map[string]string{
@@ -34,4 +39,44 @@ func GetUser(tokens database.Tokens) (*database.User, error) {
 		Email:       ur.Email,
 		Tokens:      tokens,
 	}, nil
+}
+
+// Refreshes spotify access token.
+// Does not update the database, this is expected to be done by the consumer.
+// Returns a full database.Tokens struct.
+func RefreshAccessToken(tokens database.Tokens, cid string) (*database.Tokens, error) {
+	const url = "https://accounts.spotify.com/api/token"
+	body := util.MapToQuerystring(map[string]string{
+		"grant_type":    "refresh_token",
+		"refresh_token": tokens.RefreshToken,
+		"client_id":     cid,
+	})
+
+	req, _ := http.NewRequest("POST", url, strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var tr TokenResponse
+	if err = json.NewDecoder(res.Body).Decode(&tr); err != nil {
+		return nil, err
+	}
+
+	t := MapTokenResponse(tr)
+
+	return &t, nil
+}
+
+// Maps the returned spotify token response to the database token struct
+func MapTokenResponse(tr TokenResponse) database.Tokens {
+	return database.Tokens{
+		AccessToken:  tr.AccessToken,
+		RefreshToken: tr.RefreshToken,
+		ExpiresAt:    time.Now().Add(time.Duration(tr.ExpiresIn) * time.Second),
+		TokenType:    tr.TokenType,
+		Scope:        tr.Scope,
+	}
 }
