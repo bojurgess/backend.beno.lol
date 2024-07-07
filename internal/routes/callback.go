@@ -71,7 +71,7 @@ func (p *Callback) Route(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if tr.Error != "" {
+	if tr.TokenErrorResponse != nil {
 		http.Error(w, tr.Error, http.StatusBadRequest)
 		return
 	}
@@ -85,8 +85,17 @@ func (p *Callback) Route(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := p.DB.AddUser(*user); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		// this is so ugly!! >:(
+		if !strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = p.DB.UpdateUser(*user)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.Write([]byte("Successfully authenticated! You can now close this window."))

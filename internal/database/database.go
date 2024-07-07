@@ -62,6 +62,16 @@ func (d *Database) AddUser(u User) error {
 	return nil
 }
 
+func (d *Database) UpdateUser(u User) error {
+	stmt := `UPDATE users SET display_name = COALESCE(:display_name, display_name), email = COALESCE(:email, email), access_token = COALESCE(:access_token, access_token), token_type = COALESCE(:token_type, token_type), expires_at = COALESCE(:expires_at, expires_at), scope = COALESCE(:scope, scope), refresh_token = COALESCE(:refresh_token, refresh_token) WHERE id = :id`
+	_, err := d.Connection.NamedExec(stmt, u)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (d *Database) GetUser(id string) (User, error) {
 	var u User
 	stmt := `SELECT * FROM users WHERE id = ?`
