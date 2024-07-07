@@ -21,7 +21,6 @@
 # vendor/
 
 # air
-.air.toml
 tmp/
 
 .env

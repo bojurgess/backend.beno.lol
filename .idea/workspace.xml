@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="128e4992-5704-42db-b282-ecc68ca75c4d" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/5f539e8b-cf85-4ba9-8598-38ad273f42fe.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/spotify/types.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/spotify/types.go" afterDir="false" />
-    </list>
+    <list default="true" id="128e4992-5704-42db-b282-ecc68ca75c4d" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
