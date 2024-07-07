@@ -4,7 +4,14 @@ import (
 	"flag"
 	"log"
 	"os"
+
+	"github.com/bojurgess/backend.beno.lol/internal/database"
 )
+
+type Application struct {
+	DB     *database.Database
+	Config *Config
+}
 
 type Config struct {
 	Mode *string

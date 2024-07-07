@@ -6,23 +6,20 @@ import (
 
 	"github.com/bojurgess/backend.beno.lol/internal/config"
 	"github.com/bojurgess/backend.beno.lol/internal/database"
+	"github.com/bojurgess/backend.beno.lol/internal/router"
 )
 
-type Application struct {
-	db     *database.Database
-	config *config.Config
-}
-
 func main() {
-	app := Application{
-		db:     &database.Database{},
-		config: config.InitConfig(),
+	app := config.Application{
+		DB:     &database.Database{},
+		Config: config.InitConfig(),
 	}
 
-	app.db.Connect(app.config.Env.DatabaseURL)
+	app.DB.Connect(app.Config.Env.DatabaseURL)
+	r := router.Create(app)
 
-	addr := fmt.Sprintf("http://%s:%d", *app.config.Host, *app.config.Port)
+	addr := fmt.Sprintf("http://%s:%d", *app.Config.Host, *app.Config.Port)
 	fmt.Printf("Server listening on %s\n", addr)
 
-	http.ListenAndServe(addr, nil)
+	http.ListenAndServe(addr, r.Mux)
 }
