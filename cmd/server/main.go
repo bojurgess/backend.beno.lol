@@ -18,8 +18,10 @@ func main() {
 	app.DB.Connect(app.Config.Env.DatabaseURL)
 	r := router.Create(app)
 
-	addr := fmt.Sprintf("http://%s:%d", *app.Config.Host, *app.Config.Port)
-	fmt.Printf("Server listening on %s\n", addr)
+	addr := fmt.Sprintf(":%d", *app.Config.Port)
+	fmt.Printf("Server listening on http://localhost%s\n", addr)
 
-	http.ListenAndServe(addr, r.Mux)
+	if err := http.ListenAndServe(addr, r.Mux); err != nil {
+		panic(err)
+	}
 }
