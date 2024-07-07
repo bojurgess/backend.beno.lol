@@ -44,6 +44,9 @@ func (p *Auth) Route(w http.ResponseWriter, r *http.Request) {
 		Secure:   *config.Mode == "production",
 		Path:     "/",
 		SameSite: http.SameSiteLaxMode,
+
+		// 5 minute expiry
+		MaxAge: 60 * 5,
 	})
 
 	http.Redirect(w, r, url+query, http.StatusMovedPermanently)
