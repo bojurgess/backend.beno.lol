@@ -61,3 +61,13 @@ func (d *Database) AddUser(u User) error {
 
 	return nil
 }
+
+func (d *Database) GetUser(id string) (User, error) {
+	var u User
+	stmt := `SELECT * FROM users WHERE id = ?`
+	if err := d.Connection.Get(&u, stmt, id); err != nil {
+		return u, err
+	}
+
+	return u, nil
+}
