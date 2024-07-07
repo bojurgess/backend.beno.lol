@@ -75,6 +75,12 @@ func RefreshAccessToken(tokens database.Tokens, cid string) (*database.Tokens, e
 // Everything in the token struct, excluding the access token, can be nil
 // Returns a NowPlayingResponse struct.
 func GetNowPlaying(tokens database.Tokens) (*NowPlayingResponse, error) {
+	// I think the caller should probably be handling refreshes,
+	// otherwise we make the behaviour of this helper more opaque.
+	if time.Now().After(tokens.ExpiresAt) {
+		return nil, errors.New("token expired")
+	}
+
 	var response NowPlayingResponse
 
 	url := "https://api.spotify.com/v1/me/player/currently-playing"
