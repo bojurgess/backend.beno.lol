@@ -8,6 +8,8 @@ import (
 
 type Config struct {
 	Mode *string
+	Port *int
+	Host *string
 	Env  *Environment
 }
 
@@ -19,12 +21,16 @@ type Environment struct {
 
 func InitConfig() *Config {
 	mode := flag.String("mode", "production", "Sets the mode of program execution.")
+	port := flag.Int("port", 3000, "Sets the port for the server to listen on.")
+	host := flag.String("host", "localhost", "Sets the host for the server to listen on.")
 	flag.Parse()
 
 	env := getEnv()
 
 	return &Config{
 		Mode: mode,
+		Port: port,
+		Host: host,
 		Env:  env,
 	}
 }
