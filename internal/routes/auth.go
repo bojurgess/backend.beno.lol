@@ -36,17 +36,19 @@ func (p *Auth) Route(w http.ResponseWriter, r *http.Request) {
 		"show_dialog":   "true",
 	})
 
-	r.AddCookie(&http.Cookie{
+	println(*config.Mode == "production")
+
+	http.SetCookie(w, &http.Cookie{
 		Name:  "state",
 		Value: state,
+
+		// 5 minute expiry
+		MaxAge: 60 * 5,
 
 		HttpOnly: true,
 		Secure:   *config.Mode == "production",
 		Path:     "/",
 		SameSite: http.SameSiteLaxMode,
-
-		// 5 minute expiry
-		MaxAge: 60 * 5,
 	})
 
 	http.Redirect(w, r, url+query, http.StatusMovedPermanently)
