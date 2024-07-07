@@ -45,30 +45,41 @@ func GetUser(tokens database.Tokens) (*database.User, error) {
 // Refreshes spotify access token.
 // Does not update the database, this is expected to be done by the consumer.
 // Returns a full database.Tokens struct.
-func RefreshAccessToken(tokens database.Tokens, cid string) (*database.Tokens, error) {
+func RefreshAccessToken(tokens *database.Tokens, cid string, cs string) error {
 	const url = "https://accounts.spotify.com/api/token"
 	body := util.MapToQuerystring(map[string]string{
 		"grant_type":    "refresh_token",
 		"refresh_token": tokens.RefreshToken,
-		"client_id":     cid,
 	})
+	headers := map[string]string{
+		"Content-Type":  "application/x-www-form-urlencoded",
+		"Authorization": util.EncodeAuth(cid, cs),
+	}
 
 	req, _ := http.NewRequest("POST", url, strings.NewReader(body))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var tr TokenResponse
 	if err = json.NewDecoder(res.Body).Decode(&tr); err != nil {
-		return nil, err
+		return err
+	}
+
+	if tr.TokenErrorResponse != nil {
+		return errors.New(tr.ErrorDescription)
 	}
 
 	t := MapTokenResponse(tr)
+	tokens.AccessToken = t.AccessToken
+	tokens.ExpiresAt = t.ExpiresAt
 
-	return &t, nil
+	return nil
 }
 
 // Grabs the user's currently playing track.

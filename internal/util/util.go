@@ -1,6 +1,9 @@
 package util
 
-import "strings"
+import (
+	"encoding/base64"
+	"strings"
+)
 
 func MapToQuerystring(query map[string]string) string {
 	var result []string
@@ -16,4 +19,9 @@ func MapToQuerystring(query map[string]string) string {
 	}
 
 	return strings.Join(result, "&")
+}
+
+func EncodeAuth(id string, secret string) string {
+	s := id + ":" + secret
+	return "Basic " + base64.StdEncoding.EncodeToString([]byte(s))
 }

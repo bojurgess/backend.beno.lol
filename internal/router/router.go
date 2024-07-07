@@ -28,10 +28,15 @@ func Create(app config.Application) *Router {
 		DB:     app.DB,
 		Config: app.Config,
 	}
+	test := &routes.Test{
+		DB:     app.DB,
+		Config: app.Config,
+	}
 
 	mux.HandleFunc("/auth/", auth.Route)
 	mux.HandleFunc("/auth/callback/", callback.Route)
 	mux.HandleFunc("/user/{id}/", user.Route)
+	mux.HandleFunc("/test/", test.Route)
 
 	r := &Router{
 		DB:     app.DB,

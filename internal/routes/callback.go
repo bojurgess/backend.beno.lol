@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -50,7 +49,7 @@ func (p *Callback) Route(w http.ResponseWriter, r *http.Request) {
 		"redirect_uri": fmt.Sprintf("http://%s:%d/auth/callback", *p.Config.Host, *p.Config.Port),
 	})
 	headers := map[string]string{
-		"Authorization": encodeAuth(p.Config.Env.SpotifyClientID, p.Config.Env.SpotifyClientSecret),
+		"Authorization": util.EncodeAuth(p.Config.Env.SpotifyClientID, p.Config.Env.SpotifyClientSecret),
 		"Content-Type":  "application/x-www-form-urlencoded",
 	}
 
@@ -99,9 +98,4 @@ func (p *Callback) Route(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write([]byte("Successfully authenticated! You can now close this window."))
-}
-
-func encodeAuth(id string, secret string) string {
-	s := id + ":" + secret
-	return "Basic " + base64.StdEncoding.EncodeToString([]byte(s))
 }
