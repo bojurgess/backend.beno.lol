@@ -36,8 +36,6 @@ func (p *Auth) Route(w http.ResponseWriter, r *http.Request) {
 		"show_dialog":   "true",
 	})
 
-	println(*config.Mode == "production")
-
 	http.SetCookie(w, &http.Cookie{
 		Name:  "state",
 		Value: state,
