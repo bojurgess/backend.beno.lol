@@ -23,6 +23,9 @@
 # air
 tmp/
 
+# bin
+bin/
+
 .env
 .env.*
 
