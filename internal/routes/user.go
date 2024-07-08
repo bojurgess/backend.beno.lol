@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,8 +13,14 @@ import (
 )
 
 type User struct {
-	DB     *database.Database
-	Config *config.Config
+	DB       *database.Database
+	Config   *config.Config
+	Channels map[string]*Channel
+}
+
+type Channel struct {
+	Subscribers int
+	NowPlaying  chan spotify.NowPlayingResponse
 }
 
 // Handles streaming of user NowPlaying data down to client.
@@ -43,58 +48,79 @@ func (p *User) Route(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 
+	// if channel doesn't already exist we make it and start polling from Spotify every second
+	ch := p.Channels[u.ID]
+
+	if ch == nil {
+		ch = &Channel{
+			Subscribers: 1,
+			NowPlaying:  make(chan spotify.NowPlayingResponse),
+		}
+		p.Channels[u.ID] = ch
+
+		// loop every second
+		go func() {
+			for {
+				if ch.Subscribers == 0 {
+					delete(p.Channels, u.ID)
+					return
+				}
+				p.NowPlaying(&u, nil)
+				time.Sleep(1 * time.Second)
+			}
+		}()
+	} else {
+		ch.Subscribers++
+	}
+
 	// send data every second, until client disconnects
 	for {
 		select {
 		case <-ctx.Done():
+			ch.Subscribers--
 			fmt.Println("Client disconnected")
 			return
 		case <-time.After(1 * time.Second):
-			np, err := p.getNowPlaying(&u)
+			// np, err := p.getNowPlaying(&u)
+			// if err != nil {
+			// 	fmt.Println(err)
+			// 	continue
+			// }
+			np := <-ch.NowPlaying
+
+			b, err := json.Marshal(np)
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-
-			fmt.Fprintf(w, "data: %v\n\n", np)
+			fmt.Fprintf(w, "data: %v\n\n", string(b))
 
 			w.(http.Flusher).Flush()
 		}
 	}
 }
 
-// making a wrapper function for GetNowPlaying
-func (p *User) getNowPlaying(u *database.User) (*spotify.NowPlayingResponse, error) {
+func (p *User) NowPlaying(u *database.User, last *spotify.NowPlayingResponse) {
+	fmt.Printf("Polling now playing for %s\n", u.ID)
+	ch := p.Channels[u.ID]
+
 	if time.Now().After(u.Tokens.ExpiresAt) {
 		if err := spotify.RefreshAccessToken(&u.Tokens, p.Config.Env.SpotifyClientID, p.Config.Env.SpotifyClientSecret); err != nil {
 			fmt.Printf("Error refreshing token: %v\n", err)
-			return nil, err
+			return
 		}
 
 		if err := p.DB.UpdateUser(*u); err != nil {
-			return nil, err
+			fmt.Printf("Error updating user: %v\n", err)
+			return
 		}
 	}
 
-	return spotify.GetNowPlaying(u.Tokens)
-}
-
-func formatSSE(event string, data any) (string, error) {
-	m := map[string]any{
-		"data": data,
+	np, err := spotify.GetNowPlaying(u.Tokens)
+	if err != nil {
+		fmt.Printf("Error getting now playing: %v\n", err)
+		return
 	}
 
-	buf := bytes.NewBuffer([]byte{})
-	enc := json.NewEncoder(buf)
-
-	if err := enc.Encode(m); err != nil {
-		return "", err
-	}
-
-	b := strings.Builder{}
-
-	b.WriteString(fmt.Sprintf("event: %s\n", event))
-	b.WriteString(fmt.Sprintf("data: %v\n\n", buf.String()))
-
-	return b.String(), nil
+	ch.NowPlaying <- *np
 }

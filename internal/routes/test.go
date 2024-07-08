@@ -26,7 +26,8 @@ func (p *Test) Route(w http.ResponseWriter, r *http.Request) {
         const eventSource = new EventSource('http://localhost:3000/user/8fzywdklm84r9hupsurfxdoj2');
         eventSource.onmessage = function(event) {
             const dataElement = document.getElementById('sse-data');
-            dataElement.innerHTML += console.log(event.data) + '<br>';
+			const json = JSON.parse(event.data);
+            dataElement.innerHTML += json.item.name + '<br>';
         };
     </script>
 </body>

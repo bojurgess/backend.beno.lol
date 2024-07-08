@@ -25,8 +25,9 @@ func Create(app config.Application) *Router {
 		Config: app.Config,
 	}
 	user := &routes.User{
-		DB:     app.DB,
-		Config: app.Config,
+		DB:       app.DB,
+		Config:   app.Config,
+		Channels: make(map[string]*routes.Channel),
 	}
 	test := &routes.Test{
 		DB:     app.DB,
