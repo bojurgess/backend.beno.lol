@@ -18,6 +18,11 @@ type Callback struct {
 }
 
 func (p *Callback) Route(w http.ResponseWriter, r *http.Request) {
+	if *p.Config.Mode == "production" || *p.Config.Mode == "prod" {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	var storedState string
 	requestState := r.URL.Query().Get("state")
 

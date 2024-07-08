@@ -17,6 +17,11 @@ type Auth struct {
 }
 
 func (p *Auth) Route(w http.ResponseWriter, r *http.Request) {
+	if *p.Config.Mode == "production" || *p.Config.Mode == "prod" {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	config := p.Config
 
 	state := randomString(15)
