@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bojurgess/backend.beno.lol/internal/config"
 	"github.com/bojurgess/backend.beno.lol/internal/database"
 	"github.com/bojurgess/backend.beno.lol/internal/util"
 )
@@ -45,7 +46,7 @@ func GetUser(tokens database.Tokens) (*database.User, error) {
 // Refreshes spotify access token.
 // Does not update the database, this is expected to be done by the consumer.
 // Returns a full database.Tokens struct.
-func RefreshAccessToken(tokens *database.Tokens, cid string, cs string) error {
+func RefreshAccessToken(tokens *database.Tokens, env config.Environment) error {
 	const url = "https://accounts.spotify.com/api/token"
 	body := util.MapToQuerystring(map[string]string{
 		"grant_type":    "refresh_token",
@@ -53,7 +54,7 @@ func RefreshAccessToken(tokens *database.Tokens, cid string, cs string) error {
 	})
 	headers := map[string]string{
 		"Content-Type":  "application/x-www-form-urlencoded",
-		"Authorization": util.EncodeAuth(cid, cs),
+		"Authorization": util.EncodeAuth(env.SpotifyClientID, env.SpotifyClientSecret),
 	}
 
 	req, _ := http.NewRequest("POST", url, strings.NewReader(body))
