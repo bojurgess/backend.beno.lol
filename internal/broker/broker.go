@@ -19,6 +19,7 @@ type Generator struct {
 	ch       chan spotify.NowPlayingResponse
 	refCount int
 	stopCh   chan struct{}
+	clients  map[chan spotify.NowPlayingResponse]struct{}
 }
 
 func NewBroker(c *config.Config) *Broker {
@@ -32,27 +33,32 @@ func (b *Broker) Subscribe(u *database.User) chan spotify.NowPlayingResponse {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	if gen, exists := b.generators[u.ID]; exists {
-		gen.refCount++
-		return gen.ch
+	gen, exists := b.generators[u.ID]
+	if !exists {
+		println("Creating new generator")
+		gen = &Generator{
+			ch:       make(chan spotify.NowPlayingResponse),
+			refCount: 0,
+			stopCh:   make(chan struct{}),
+			clients:  make(map[chan spotify.NowPlayingResponse]struct{}),
+		}
+		b.generators[u.ID] = gen
+		go b.GetNowPlaying(u, gen)
 	}
 
-	gen := &Generator{
-		ch:       make(chan spotify.NowPlayingResponse),
-		refCount: 1,
-		stopCh:   make(chan struct{}),
-	}
-	b.generators[u.ID] = gen
+	clientCh := make(chan spotify.NowPlayingResponse)
+	gen.clients[clientCh] = struct{}{}
+	gen.refCount++
 
-	go b.GetNowPlaying(u, gen)
-	return gen.ch
+	return clientCh
 }
 
-func (b *Broker) Unsubscribe(id string) {
+func (b *Broker) Unsubscribe(id string, clientCh chan spotify.NowPlayingResponse) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
 	if gen, exists := b.generators[id]; exists {
+		delete(gen.clients, clientCh)
 		gen.refCount--
 		if gen.refCount == 0 {
 			close(gen.stopCh)
@@ -72,7 +78,14 @@ func (b *Broker) GetNowPlaying(u *database.User, gen *Generator) {
 			return
 		case <-ticker.C:
 			np := b.WrappedNP(u)
-			gen.ch <- np
+			b.mu.Lock()
+			for clientCh := range gen.clients {
+				select {
+				case clientCh <- np:
+				default:
+				}
+			}
+			b.mu.Unlock()
 		}
 	}
 }

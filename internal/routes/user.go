@@ -1,10 +1,10 @@
 package routes
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/bojurgess/backend.beno.lol/internal/broker"
 	"github.com/bojurgess/backend.beno.lol/internal/config"
@@ -37,19 +37,22 @@ func (p *User) Route(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 
-	ctx := r.Context()
-	ticker := time.NewTicker(time.Second)
-
 	ch := p.Broker.Subscribe(&u)
+
+	ctx := r.Context()
 
 	for {
 		select {
 		case <-ctx.Done():
-			ticker.Stop()
-			p.Broker.Unsubscribe(u.ID)
+			p.Broker.Unsubscribe(u.ID, ch)
 			return
-		case data := <-ch:
-			fmt.Fprintf(w, "data: %v\n\n", data)
+		case np := <-ch:
+			data, err := json.Marshal(np)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			fmt.Fprintf(w, "data: %s\n\n", data)
 			w.(http.Flusher).Flush()
 		}
 	}
