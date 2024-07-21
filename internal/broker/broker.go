@@ -1,6 +1,7 @@
 package broker
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -94,13 +95,17 @@ func (b *Broker) WrappedNP(u *database.User) spotify.NowPlayingResponse {
 	if time.Now().After(u.ExpiresAt) {
 		err := spotify.RefreshAccessToken(&u.Tokens, *b.config.Env)
 		if err != nil {
-			panic(err)
+			fmt.Println(err)
 		}
 	}
 
 	np, err := spotify.GetNowPlaying(u.Tokens)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+	}
+
+	if np == nil {
+		np = &spotify.NowPlayingResponse{}
 	}
 
 	return *np
