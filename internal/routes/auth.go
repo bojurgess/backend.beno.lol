@@ -39,6 +39,8 @@ func (p *Auth) Route(w http.ResponseWriter, r *http.Request) {
 		"user-read-currently-playing",
 	}
 
+	fmt.Println(protocol)
+
 	url := "https://accounts.spotify.com/authorize?"
 	query := util.MapToQuerystring(map[string]string{
 		"client_id":     config.Env.SpotifyClientID,
