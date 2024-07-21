@@ -14,10 +14,11 @@ type Application struct {
 }
 
 type Config struct {
-	Mode *string
-	Port *int
-	Host *string
-	Env  *Environment
+	Mode   *string
+	Port   *int
+	Host   *string
+	Origin *string
+	Env    *Environment
 }
 
 type Environment struct {
@@ -30,15 +31,17 @@ func InitConfig() *Config {
 	mode := flag.String("mode", "production", "Sets the mode of program execution.")
 	port := flag.Int("port", 3000, "Sets the port for the server to listen on.")
 	host := flag.String("host", "localhost", "Sets the host for the server to listen on.")
+	origin := flag.String("origin", "http://localhost:3000", "Sets the origin for the server to allow CORS requests from.")
 	flag.Parse()
 
 	env := getEnv()
 
 	return &Config{
-		Mode: mode,
-		Port: port,
-		Host: host,
-		Env:  env,
+		Mode:   mode,
+		Port:   port,
+		Host:   host,
+		Origin: origin,
+		Env:    env,
 	}
 }
 

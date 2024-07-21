@@ -35,7 +35,7 @@ func (p *Auth) Route(w http.ResponseWriter, r *http.Request) {
 	query := util.MapToQuerystring(map[string]string{
 		"client_id":     config.Env.SpotifyClientID,
 		"response_type": "code",
-		"redirect_uri":  fmt.Sprintf("http://%s:%d/auth/callback", *config.Host, *config.Port),
+		"redirect_uri":  fmt.Sprintf("http://%s/auth/callback", *config.Origin),
 		"state":         state,
 		"scope":         strings.Join(scope, " "),
 		"show_dialog":   "true",
