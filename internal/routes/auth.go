@@ -17,9 +17,17 @@ type Auth struct {
 }
 
 func (p *Auth) Route(w http.ResponseWriter, r *http.Request) {
+	var protocol string
+
 	if *p.Config.Mode == "production" || *p.Config.Mode == "prod" {
 		w.WriteHeader(http.StatusForbidden)
 		return
+	}
+
+	if *p.Config.Origin != "backend.beno.lol" {
+		protocol = "http"
+	} else {
+		protocol = "https"
 	}
 
 	config := p.Config
@@ -35,7 +43,7 @@ func (p *Auth) Route(w http.ResponseWriter, r *http.Request) {
 	query := util.MapToQuerystring(map[string]string{
 		"client_id":     config.Env.SpotifyClientID,
 		"response_type": "code",
-		"redirect_uri":  fmt.Sprintf("http://%s/auth/callback", *config.Origin),
+		"redirect_uri":  fmt.Sprintf("%s://%s/auth/callback", protocol, *config.Origin),
 		"state":         state,
 		"scope":         strings.Join(scope, " "),
 		"show_dialog":   "true",
