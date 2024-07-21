@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 type Database struct {
@@ -34,7 +34,7 @@ type Tokens struct {
 }
 
 func (d *Database) Connect(addr string) {
-	db, err := sqlx.Connect("sqlite3", addr)
+	db, err := sqlx.Connect("sqlite", addr)
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
